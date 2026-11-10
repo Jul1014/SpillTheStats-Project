@@ -4,6 +4,7 @@ type FontSize = 'small' | 'normal' | 'large' | 'extra-large';
 type Contrast = 'normal' | 'high';
 type Colorblind = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
 type Theme = 'light' | 'dark';
+export type PanelState = 'closed' | 'minimized' | 'open';
 
 interface Settings {
   fontSize: FontSize;
@@ -20,17 +21,24 @@ const DEFAULT_SETTINGS: Settings = {
 };
 
 interface AccessibilityPanelProps {
-  isOpen?: boolean;
-  onToggle?: () => void;
+  state?: PanelState;
+  onStateChange?: (newState: PanelState) => void;
 }
 
-export const AccessibilityPanel = ({ isOpen: controlledOpen, onToggle }: AccessibilityPanelProps = {}) => {
-  const [internalOpen, setInternalOpen] = useState(false);
+export const AccessibilityPanel = ({ 
+  state: controlledState, 
+  onStateChange 
+}: AccessibilityPanelProps = {}) => {
+  // Estado interno por defecto: empieza minimizado (solo el ♿ visible)
+  const [internalState, setInternalState] = useState<PanelState>('minimized');
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
-  // Si viene un estado controlado desde App.tsx, úsalo; si no, usa el interno
-  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const setIsOpen = onToggle ?? (() => setInternalOpen(prev => !prev));
+  // Usa el estado controlado si viene desde App, si no usa el interno
+  const state = controlledState !== undefined ? controlledState : internalState;
+  const setState = (newState: PanelState) => {
+    if (onStateChange) onStateChange(newState);
+    else setInternalState(newState);
+  };
 
   // Cargar configuración inicial desde localStorage
   useEffect(() => {
@@ -103,37 +111,41 @@ export const AccessibilityPanel = ({ isOpen: controlledOpen, onToggle }: Accessi
     </button>
   );
 
-  return (
-    // 👇 CAMBIO CLAVE: top-50 end-0 translate-middle-y lo centra verticalmente
+   return (
     <div className="position-fixed top-50 end-0 translate-middle-y p-3" style={{ zIndex: 9999 }}>
-      {!isOpen ? (
+      
+      {/* 🔵 ESTADO MINIMIZED: Solo el botón flotante ♿ */}
+      {state === 'minimized' && (
         <button
           className="btn btn-primary rounded-circle shadow d-flex align-items-center justify-content-center"
           style={{ width: '56px', height: '56px', fontSize: '1.75rem' }}
-          onClick={setIsOpen}
+          onClick={() => setState('open')}
           aria-label="Abrir panel de accesibilidad"
         >
           ♿
         </button>
-      ) : (
+      )}
+
+      {/* 🟢 ESTADO OPEN: Panel completo */}
+      {state === 'open' && (
         <div className="card shadow-lg p-3" style={{ width: '320px' }}>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="mb-0">Accesibilidad</h5>
             <div className="d-flex gap-2">
-              {/* 👇 NUEVO: Botón de minimizar (colapsa pero deja el ♿ visible) */}
+              {/* 👇 Minimizar: vuelve a 'minimized' (queda el ♿ visible) */}
               <button
                 className="btn btn-sm btn-outline-secondary"
-                onClick={setIsOpen}
+                onClick={() => setState('minimized')}
                 aria-label="Minimizar panel"
                 title="Minimizar"
               >
                 −
               </button>
-              {/* Botón de cerrar (hace lo mismo en este diseño simple) */}
+              {/* 👇 Cerrar: pasa a 'closed' (desaparece TODO) */}
               <button
                 className="btn-close"
                 aria-label="Cerrar panel"
-                onClick={setIsOpen}
+                onClick={() => setState('closed')}
               />
             </div>
           </div>
@@ -187,6 +199,8 @@ export const AccessibilityPanel = ({ isOpen: controlledOpen, onToggle }: Accessi
           </div>
         </div>
       )}
+      {/* 🔴 ESTADO CLOSED: No se renderiza nada */}
+      {state === 'closed' && null}
     </div>
   );
 };
