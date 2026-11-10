@@ -11,9 +11,10 @@ export default function App() {
   // 👇 Función helper para el botón toggle del navbar
   const toggleAccessibility = () => {
     setAccessibilityState((prev: PanelState) => {
-      if (prev === 'closed') return 'open';       // Si está cerrado → abrir
-      if (prev === 'minimized') return 'open';    // Si está minimizado → abrir
-      return 'minimized';                         // Si está abierto → minimizar
+      // Si está cerrado → mostrar el botón flotante
+      if (prev === 'closed') return 'minimized';
+      // En cualquier otro caso → ocultar todo
+      return 'closed';
     });
   };
 
