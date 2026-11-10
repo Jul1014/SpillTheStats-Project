@@ -1,19 +1,29 @@
 import { useState } from "react";
-import { AccessibilityPanel } from "./components/AccessibilityPanel";
+import { AccessibilityPanel, type PanelState } from "./components/AccessibilityPanel";
 import './styles/marquee.css'; // 👈 Importa el CSS de la marquee
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  // 👇 NUEVO: Estado compartido para el panel de accesibilidad
-  const [accessibilityOpen, setAccessibilityOpen] = useState(false);
+  
+  // 👇 CAMBIO: Ahora es un estado de 3 valores, empieza minimizado
+  const [accessibilityState, setAccessibilityState] = useState<PanelState>('minimized');
+
+  // 👇 Función helper para el botón toggle del navbar
+  const toggleAccessibility = () => {
+    setAccessibilityState((prev: PanelState) => {
+      if (prev === 'closed') return 'open';       // Si está cerrado → abrir
+      if (prev === 'minimized') return 'open';    // Si está minimizado → abrir
+      return 'minimized';                         // Si está abierto → minimizar
+    });
+  };
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-white text-dark">
 
-      {/* Panel de accesibilidad con estado controlado desde aquí */}
+      {/* Panel con el nuevo sistema de 3 estados */}
       <AccessibilityPanel
-        isOpen={accessibilityOpen}
-        onToggle={() => setAccessibilityOpen(prev => !prev)}
+        state={accessibilityState}
+        onStateChange={setAccessibilityState}
       />
 
       {/* Marquee Bar - AHORA CON ANIMACIÓN */}
@@ -24,6 +34,7 @@ export default function App() {
       </div>
 
       {/* Navigation Bar */}
+
       <nav className="w-100 border-bottom border-dark px-4 px-sm-5 py-3 d-flex align-items-center justify-content-between">
         {/* Logo */}
         <div className="d-flex align-items-center gap-3">
@@ -37,11 +48,10 @@ export default function App() {
           <a href="#" className="text-dark text-decoration-none">Home</a>
           <a href="#" className="text-dark text-decoration-none">Análisis</a>
           <a href="#" className="text-dark text-decoration-none">Champions</a>
-
-          {/* 👇 NUEVO: Botón de accesibilidad en el navbar desktop */}
+          {/* 👇 Botón toggle: ahora usa la nueva función */}
           <button
             className="btn btn-sm btn-outline-dark d-flex align-items-center gap-2"
-            onClick={() => setAccessibilityOpen(prev => !prev)}
+            onClick={toggleAccessibility}
             aria-label="Opciones de accesibilidad"
           >
             <span>♿</span>
@@ -63,7 +73,9 @@ export default function App() {
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Menu"
         >
-          {/* ... (las 3 líneas del hamburger igual) ... */}
+          <span className={`d-block bg-dark transition-transform ${menuOpen ? "rotate-45 translate-y-1" : ""}`} style={{ width: "16px", height: "2px" }}></span>
+          <span className={`d-block bg-dark transition-opacity ${menuOpen ? "opacity-0" : ""}`} style={{ width: "16px", height: "2px" }}></span>
+          <span className={`d-block bg-dark transition-transform ${menuOpen ? "rotate-n45 translate-y-n1" : ""}`} style={{ width: "16px", height: "2px" }}></span>
         </button>
       </nav>
 
@@ -79,8 +91,8 @@ export default function App() {
             <button
               className="btn btn-outline-dark btn-sm d-flex align-items-center gap-2"
               onClick={() => {
-                setAccessibilityOpen(true);
-                setMenuOpen(false); // Cierra el menú móvil al abrir el panel
+                toggleAccessibility();
+                setMenuOpen(false);
               }}
             >
               <span>♿</span> Accesibilidad
