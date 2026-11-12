@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { AccessibilityPanel, type PanelState } from "./components/AccessibilityPanel";
-import './styles/marquee.css'; // 👈 Importa el CSS de la marquee
+import { BionicText } from "./components/BionicText";
+import { useBionicText } from "./hooks/useBionicText";
+import './styles/marquee.css';
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   
-  // 👇 CAMBIO: Ahora es un estado de 3 valores, empieza minimizado
   const [accessibilityState, setAccessibilityState] = useState<PanelState>('minimized');
 
-  // 👇 Función helper para el botón toggle del navbar
   const toggleAccessibility = () => {
     setAccessibilityState((prev: PanelState) => {
       // Si está cerrado → mostrar el botón flotante
@@ -18,16 +18,18 @@ export default function App() {
     });
   };
 
+  const { isBionicActive } = useBionicText();
+
   return (
     <div className="d-flex flex-column min-vh-100 bg-white text-dark">
 
-      {/* Panel con el nuevo sistema de 3 estados */}
+      {/* Panel con el sistema de 3 estados */}
       <AccessibilityPanel
         state={accessibilityState}
         onStateChange={setAccessibilityState}
       />
 
-      {/* Marquee Bar - AHORA CON ANIMACIÓN */}
+      {/* Marquee Bar */}
       <div className="marquee-container w-100 border-bottom border-dark bg-dark text-white" style={{ height: "2rem" }}>
         <div className="marquee-content font-monospace small text-uppercase tracking-wider">
           NEXT DATA • SPILL THE STATS • LEAGUE OF LEGENDS LAN • NEXT DATA • SPILL THE STATS •
@@ -49,7 +51,7 @@ export default function App() {
           <a href="#" className="text-dark text-decoration-none">Home</a>
           <a href="#" className="text-dark text-decoration-none">Análisis</a>
           <a href="#" className="text-dark text-decoration-none">Champions</a>
-          {/* 👇 Botón toggle: ahora usa la nueva función */}
+          {/* Toggle*/}
           <button
             className="btn btn-sm btn-outline-dark d-flex align-items-center gap-2"
             onClick={toggleAccessibility}
@@ -88,7 +90,7 @@ export default function App() {
             <a href="#" className="text-dark text-decoration-none border-bottom border-dashed border-secondary pb-2">Análisis</a>
             <a href="#" className="text-dark text-decoration-none border-bottom border-dashed border-secondary pb-2">Champions</a>
 
-            {/* 👇 NUEVO: Botón de accesibilidad en menú móvil */}
+            {/* Botón de accesibilidad en menú móvil */}
             <button
               className="btn btn-outline-dark btn-sm d-flex align-items-center gap-2"
               onClick={() => {
@@ -109,7 +111,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Hero Section - Two halves (Usando el Grid System de Bootstrap) */}
+      {/* Hero Section - Two halves */}
       <section className="flex-grow-1 d-flex align-items-stretch">
         <div className="container-fluid p-0 d-flex flex-column flex-md-row">
           
@@ -128,9 +130,12 @@ export default function App() {
               ¡Bienvenido a<br />Spill the Stats!
             </h1>
 
-            <p className="text-center small text-md-base leading-relaxed font-monospace border border-dashed border-secondary p-4 p-md-5" style={{ maxWidth: "500px" }}>
-              En nuestra página encontrarás los datos más recientes de League of Legends LAN, para buscar los mejores campeones y builds, counters, winrates y mucho más. Crea una cuenta para recomendaciones personalizadas con nuestro algoritmo personal de SpillTheStats.
-            </p>
+          <BionicText 
+            isActive={isBionicActive}
+            className="text-center small text-md-base leading-relaxed font-monospace border border-dashed border-secondary p-4 p-md-5 d-block"
+            style={{ maxWidth: "500px" }}
+            text="En nuestra página encontrarás los datos más recientes de League of Legends LAN, para buscar los mejores campeones y builds, counters, winrates y mucho más. Crea una cuenta para recomendaciones personalizadas con nuestro algoritmo personal de SpillTheStats."
+          />
 
             <div className="mt-4">
               <button className="btn btn-outline-dark border-2 px-5 py-3 font-monospace small text-uppercase tracking-wide rounded-0">
