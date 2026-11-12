@@ -1,26 +1,32 @@
 import { useState, useEffect } from 'react';
 
 export function useBionicText() {
-  const [isActive, setIsActive] = useState(false);
+  const [isBionicActive, setIsBionicActive] = useState(false);
 
   useEffect(() => {
+
     const checkSettings = () => {
       const saved = localStorage.getItem('accessibilitySettings');
       if (saved) {
         try {
           const settings = JSON.parse(saved);
-          setIsActive(!!settings.bionicText);
+          setIsBionicActive(!!settings.bionicText);
         } catch (e) {
-          console.error("Error leyendo configuración biónica", e);
+          console.error("Error leyendo configuración bionic text", e);
         }
       }
     };
 
-    checkSettings(); // Leer al montar el componente
-    window.addEventListener('storage', checkSettings); // Escuchar cambios en otras pestañas
+    checkSettings();
     
-    return () => window.removeEventListener('storage', checkSettings);
+    window.addEventListener('accessibility-changed', checkSettings);
+    window.addEventListener('storage', checkSettings);
+    
+    return () => {
+      window.removeEventListener('accessibility-changed', checkSettings);
+      window.removeEventListener('storage', checkSettings);
+    };
   }, []);
 
-  return { isBionicActive: isActive };
+  return { isBionicActive };
 }

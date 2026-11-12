@@ -51,8 +51,12 @@ export const AccessibilityPanel = ({ state: controlledState, onStateChange }: Ac
   }, []);
 
   // Aplicar configuración al DOM
-  useEffect(() => {
+useEffect(() => {
     localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
+    
+    // Aviso de cambio
+    window.dispatchEvent(new Event('accessibility-changed'));
+    
     const root = document.documentElement;
 
     // 1. Tamaño de letra
