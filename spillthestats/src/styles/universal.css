@@ -1,0 +1,72 @@
+.app-marquee {
+  height: 2rem;
+}
+
+.app-logo-mark {
+  width: 40px;
+  height: 40px;
+}
+
+.app-profile-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.app-mobile-profile-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.app-profile-glyph,
+.app-footer-mark-label {
+  font-size: 10px;
+}
+
+.app-menu-toggle {
+  width: 36px;
+  height: 36px;
+}
+
+.app-menu-line {
+  width: 16px;
+  height: 2px;
+}
+
+.app-hero-image-placeholder {
+  min-height: 250px;
+}
+
+.app-hero-image-frame {
+  width: 80%;
+  height: 70%;
+}
+
+.app-hero-image-icon {
+  font-size: 3rem;
+}
+
+.app-hero-description {
+  max-width: 500px;
+}
+
+.app-footer-mark,
+.app-footer-social-link {
+  width: 32px;
+  height: 32px;
+}
+
+.accessibility-panel-container {
+  z-index: 9999;
+}
+
+.accessibility-panel-trigger {
+  width: 56px;
+  height: 56px;
+  font-size: 1.75rem;
+}
+
+.accessibility-panel-card {
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+}

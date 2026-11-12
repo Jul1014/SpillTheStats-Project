@@ -1,27 +1,19 @@
-import { useState, useEffect } from 'react';
-
-type FontSize = 'small' | 'normal' | 'large' | 'extra-large';
-type Contrast = 'normal' | 'high' | 'low';
-type Colorblind = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
-type Theme = 'light' | 'dark';
+import { useState, type ReactNode } from 'react';
+import { useAccessibilitySettings } from '../hooks/useAccessibilitySettings';
 
 export type PanelState = 'closed' | 'minimized' | 'open';
 
-interface Settings {
-  fontSize: FontSize;
-  contrast: Contrast;
-  colorblind: Colorblind;
-  theme: Theme;
-  bionicText: boolean;
+interface OptionButtonProps {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
 }
 
-const DEFAULT_SETTINGS: Settings = {
-  fontSize: 'normal',
-  contrast: 'normal',
-  colorblind: 'none',
-  theme: 'light',
-  bionicText: false,
-};
+const OptionButton = ({ active, onClick, children }: OptionButtonProps) => (
+  <button className={`btn btn-sm ${active ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={onClick} type="button">
+    {children}
+  </button>
+);
 
 interface AccessibilityPanelProps {
   state?: PanelState;
@@ -30,7 +22,7 @@ interface AccessibilityPanelProps {
 
 export const AccessibilityPanel = ({ state: controlledState, onStateChange }: AccessibilityPanelProps = {}) => {
   const [internalState, setInternalState] = useState<PanelState>('minimized');
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const { settings, updateSetting, resetSettings } = useAccessibilitySettings();
 
   const state = controlledState !== undefined ? controlledState : internalState;
   const setState = (newState: PanelState) => {
@@ -38,71 +30,11 @@ export const AccessibilityPanel = ({ state: controlledState, onStateChange }: Ac
     else setInternalState(newState);
   };
 
-  // Cargar configuración guardada
-  useEffect(() => {
-    const saved = localStorage.getItem('accessibilitySettings');
-    if (saved) {
-      try {
-        setSettings(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error cargando settings', e);
-      }
-    }
-  }, []);
-
-  // Aplicar configuración al DOM
-useEffect(() => {
-    localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
-    
-    // Aviso de cambio
-    window.dispatchEvent(new Event('accessibility-changed'));
-    
-    const root = document.documentElement;
-
-    // 1. Tamaño de letra
-    const scales: Record<FontSize, number> = { small: 0.85, normal: 1, large: 1.2, 'extra-large': 1.5 };
-    root.style.fontSize = `${16 * scales[settings.fontSize]}px`;
-
-    // 2. Filtros (Contraste + Daltonismo combinados)
-    const filters: string[] = [];
-    if (settings.contrast === 'high') filters.push('contrast(1.5)');
-    if (settings.contrast === 'low') filters.push('contrast(0.7) brightness(1.1)');
-
-    const svgFilters: Record<Colorblind, string> = {
-      none: '',
-      protanopia: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'p\'><feColorMatrix type=\'matrix\' values=\'0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0\'/></filter></svg>#p")',
-      deuteranopia: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'d\'><feColorMatrix type=\'matrix\' values=\'0.625 0.375 0 0 0 0.7 0.3 0 0 0 0 0.3 0.7 0 0 0 0 0 1 0\'/></filter></svg>#d")',
-      tritanopia: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'t\'><feColorMatrix type=\'matrix\' values=\'0.95 0.05 0 0 0 0 0.433 0.567 0 0 0 0.475 0.525 0 0 0 0 0 1 0\'/></filter></svg>#t")',
-      achromatopsia: 'grayscale(100%)',
-    };
-    if (settings.colorblind !== 'none') filters.push(svgFilters[settings.colorblind]);
-    root.style.filter = filters.join(' ');
-
-    // 3. Tema
-    root.setAttribute('data-bs-theme', settings.theme);
-  }, [settings]);
-
-  const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleReset = () => {
-    setSettings(DEFAULT_SETTINGS);
-    localStorage.removeItem('accessibilitySettings');
-  };
-
-  const OptionButton = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
-    <button className={`btn btn-sm ${active ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={onClick} type="button">
-      {children}
-    </button>
-  );
-
   return (
-    <div className="position-fixed top-50 end-0 translate-middle-y p-3" style={{ zIndex: 9999 }}>
+    <div className="position-fixed top-50 end-0 translate-middle-y p-3 accessibility-panel-container">
       {state === 'minimized' && (
         <button
-          className="btn btn-primary rounded-circle shadow d-flex align-items-center justify-content-center"
-          style={{ width: '56px', height: '56px', fontSize: '1.75rem' }}
+          className="btn btn-primary rounded-circle shadow d-flex align-items-center justify-content-center accessibility-panel-trigger"
           onClick={() => setState('open')}
           aria-label="Abrir panel"
         >
@@ -111,7 +43,7 @@ useEffect(() => {
       )}
 
       {state === 'open' && (
-        <div className="card shadow-lg p-3" style={{ width: '320px', maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="card shadow-lg p-3 accessibility-panel-card">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="mb-0">Accesibilidad</h5>
             <div className="d-flex gap-2">
@@ -182,7 +114,7 @@ useEffect(() => {
             </div>
 
             {/* REINICIAR */}
-            <button className="btn btn-outline-danger btn-sm mt-2" onClick={handleReset}>
+            <button className="btn btn-outline-danger btn-sm mt-2" onClick={resetSettings}>
               Reiniciar configuración
             </button>
           </div>
